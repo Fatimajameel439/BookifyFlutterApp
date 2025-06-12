@@ -1,7 +1,6 @@
 import 'package:bookify/screens/auth/users/sign_in.dart';
 import 'package:bookify/utils/constants/colors.dart';
 import 'package:bookify/utils/themes/custom_themes/elevated_button_theme.dart';
-import 'package:bookify/utils/themes/custom_themes/outlined_button_theme.dart';
 import 'package:bookify/utils/themes/custom_themes/text_theme.dart';
 import 'package:flutter/material.dart';
 
