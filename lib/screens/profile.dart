@@ -35,11 +35,28 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             // Profile Pic
-            CircleAvatar(
-              radius: 60,
-              backgroundColor: MyColors.primary.withOpacity(0.2),
-              child: Icon(Icons.person, size: 60, color: MyColors.primary),
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundColor: MyColors.primary.withOpacity(0.2),
+                  child: Icon(Icons.person, size: 60, color: MyColors.primary),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: MyColors.primary,
+                    ),
+                    child: Icon(Icons.add, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
             ),
+
             const SizedBox(height: 20),
             Form(
               child: Column(
