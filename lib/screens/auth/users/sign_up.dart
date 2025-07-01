@@ -2,10 +2,12 @@ import 'package:bookify/screens/auth/users/sign_in.dart';
 import 'package:bookify/utils/constants/colors.dart';
 import 'package:bookify/utils/themes/custom_themes/elevated_button_theme.dart';
 import 'package:bookify/utils/themes/custom_themes/text_theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+  SignUp({super.key});
 
   @override
   State<SignUp> createState() => _SignUpState();
@@ -13,12 +15,20 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   final formKey = GlobalKey<FormState>();
+
   final nameController = TextEditingController();
+
   final emailController = TextEditingController();
+
   final passController = TextEditingController();
+
   final phoneController = TextEditingController();
+
   final addressController = TextEditingController();
+
   bool _obscurePassword = true;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +68,7 @@ class _SignUpState extends State<SignUp> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 10),
+
                       // Name
                       TextFormField(
                         controller: nameController,
@@ -79,6 +90,7 @@ class _SignUpState extends State<SignUp> {
                         },
                       ),
                       const SizedBox(height: 20),
+
                       // Email
                       TextFormField(
                         controller: emailController,
@@ -102,6 +114,7 @@ class _SignUpState extends State<SignUp> {
                         },
                       ),
                       const SizedBox(height: 20),
+
                       // Password
                       TextFormField(
                         controller: passController,
@@ -134,12 +147,14 @@ class _SignUpState extends State<SignUp> {
                           final passRegex = RegExp(
                             r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
                           );
-                          if (!passRegex.hasMatch(value))
+                          if (!passRegex.hasMatch(value)) {
                             return "Password must be 8+ chars w/ upper, lower, digit, special char";
+                          }
                           return null;
                         },
                       ),
                       const SizedBox(height: 20),
+
                       // Phone
                       TextFormField(
                         controller: phoneController,
@@ -163,6 +178,7 @@ class _SignUpState extends State<SignUp> {
                         },
                       ),
                       const SizedBox(height: 20),
+
                       // Address
                       TextFormField(
                         controller: addressController,
@@ -186,21 +202,77 @@ class _SignUpState extends State<SignUp> {
                         },
                       ),
                       const SizedBox(height: 20),
+
+                      // Sign Up Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           style: MyElevatedButtonTheme
                               .lightElevatedButtonTheme
                               .style,
-                          onPressed: () {
-                            if (formKey.currentState?.validate() ?? false) {
-                              // Submit logic
+                          onPressed: () async {
+                            try {
+                              final userCredential = await _auth
+                                  .createUserWithEmailAndPassword(
+                                    email: emailController.text.trim(),
+                                    password: passController.text.trim(),
+                                  );
+
+                              final user = userCredential.user;
+
+                              if (user != null) {
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .set({
+                                      'name': nameController.text.trim(),
+                                      'email': emailController.text.trim(),
+                                      'role': "User",
+                                      'phone': phoneController.text.trim(),
+                                      'address': addressController.text.trim(),
+                                      'uid': user.uid,
+                                      'profile_image_url': '',
+                                      'createdAt': FieldValue.serverTimestamp(),
+                                    });
+
+                                // Clear form
+                                nameController.clear();
+                                emailController.clear();
+                                passController.clear();
+                                phoneController.clear();
+                                addressController.clear();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("SignUp Successful")),
+                                );
+
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SignIn(),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "Sign up failed: No user returned",
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              debugPrint("Error during sign up: $e");
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Sign up failed: $e")),
+                              );
                             }
                           },
                           child: const Text('Sign Up'),
                         ),
                       ),
                       const SizedBox(height: 20),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -209,10 +281,14 @@ class _SignUpState extends State<SignUp> {
                             style: MyTextTheme.lightTextTheme.bodySmall,
                           ),
                           InkWell(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const SignIn()),
-                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignIn(),
+                                ),
+                              );
+                            },
                             child: Text(
                               "Sign In",
                               style: TextStyle(
